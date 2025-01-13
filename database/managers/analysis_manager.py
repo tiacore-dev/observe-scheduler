@@ -1,6 +1,7 @@
 import logging
 import json
 from datetime import datetime, timedelta
+from pytz import timezone, UTC
 from database.models.analysis import AnalysisResult
 from database.db_globals import Session
 from utils.db_get import get_prompt_name
@@ -95,22 +96,27 @@ class AnalysisManager:
 
     def get_today_analysis(self, chat_id):
         """
-        Возвращает результат анализа для указанного chat_id, проведённого сегодня.
-        Фильтрация по chat_id выполняется в памяти.
+        Возвращает результат анализа для указанного chat_id, проведённого сегодня по Новосибирскому времени.
         """
         with self.Session() as session:
-            # Используем UTC для корректной работы с датами
-            today = datetime.utcnow().date()
-            tomorrow = today + timedelta(days=1)
+            # Текущее время в Новосибирске
+            novosibirsk_tz = timezone('Asia/Novosibirsk')
+            now_nsk = datetime.now(novosibirsk_tz)
 
-            # Извлекаем все записи за указанный период
+            # Начало и конец сегодняшнего дня в Новосибирском времени
+            today_nsk_start = novosibirsk_tz.localize(
+                datetime(now_nsk.year, now_nsk.month, now_nsk.day, 0, 0))
+            tomorrow_nsk_start = today_nsk_start + timedelta(days=1)
+
+            # Конвертация диапазона в UTC
+            today_utc_start = today_nsk_start.astimezone(UTC)
+            tomorrow_utc_start = tomorrow_nsk_start.astimezone(UTC)
+
+            # Извлекаем все записи за период (UTC)
             results = (
                 session.query(AnalysisResult)
-                # Анализы с начала сегодняшнего дня
-                .filter(AnalysisResult.timestamp >= today)
-                # До начала завтрашнего дня
-                .filter(AnalysisResult.timestamp < tomorrow)
-                # Сортировка от последнего к первому
+                .filter(AnalysisResult.timestamp >= today_utc_start)
+                .filter(AnalysisResult.timestamp < tomorrow_utc_start)
                 .order_by(AnalysisResult.timestamp.desc())
                 .all()
             )
@@ -118,16 +124,12 @@ class AnalysisManager:
             # Фильтруем записи в памяти
             for result in results:
                 try:
-                    # Десериализуем filters
                     filters = json.loads(
                         result.filters) if result.filters else {}
-                    # Сравниваем chat_id
-                    # Приводим chat_id к строке для сравнения
                     if filters.get("chat_id") == str(chat_id):
                         return result
                 except json.JSONDecodeError:
-                    # Логируем ошибку, если filters невалидный JSON
                     logging.error(f"""Некорректный JSON в поле filters: {
-                                  result.filters}""")
+                        result.filters}""")
 
             return None  # Если ни одна запись не соответствует

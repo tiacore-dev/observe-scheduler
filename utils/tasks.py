@@ -3,7 +3,7 @@ import os
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
-from pytz import timezone
+from pytz import timezone, UTC
 from telebot import TeleBot
 from utils import get_chat_name
 
@@ -33,27 +33,29 @@ def analyze(chat_id, analysis_time):
         logging.error(f"Чат {chat_id} не найден.")
         raise ValueError(f"Чат {chat_id} не найден.")
 
-    now = datetime.now(novosibirsk_tz)
+    now_nsk = datetime.now(novosibirsk_tz)
 
-    analysis_start = datetime(
-        year=now.year,
-        month=now.month,
-        day=now.day - 1,
+    # Временные диапазоны в Новосибирском времени
+    analysis_start_nsk = novosibirsk_tz.localize(datetime(
+        year=now_nsk.year,
+        month=now_nsk.month,
+        day=now_nsk.day - 1,
         hour=analysis_time.hour,
         minute=analysis_time.minute,
         second=analysis_time.second,
-        tzinfo=novosibirsk_tz
-    ).astimezone(novosibirsk_tz)
-
-    analysis_end = datetime(
-        year=now.year,
-        month=now.month,
-        day=now.day,
+    ))
+    analysis_end_nsk = novosibirsk_tz.localize(datetime(
+        year=now_nsk.year,
+        month=now_nsk.month,
+        day=now_nsk.day,
         hour=analysis_time.hour,
         minute=analysis_time.minute,
         second=analysis_time.second,
-        tzinfo=novosibirsk_tz
-    ).astimezone(novosibirsk_tz)
+    ))
+
+    # Конвертация в UTC
+    analysis_start = analysis_start_nsk.astimezone(UTC)
+    analysis_end = analysis_end_nsk.astimezone(UTC)
 
     logging.info(f"Диапазон анализа: {analysis_start} - {analysis_end}")
 
