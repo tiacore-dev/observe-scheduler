@@ -93,19 +93,20 @@ class AnalysisManager:
                 logging.error(f"Ошибка при получении анализа по ID: {e}")
                 raise
 
-    def get_today_analysis(self, prompt_id: str):
+    def get_today_analysis(self, chat_id: int):
         """
-        Возвращает результат анализа для указанного prompt_id, проведённого сегодня.
+        Возвращает результат анализа для указанного chat_id, проведённого сегодня.
         """
         with self.Session() as session:
-            # Используем UTC, чтобы избежать проблем с таймзонами
+            # Используем UTC для корректной работы с датами
             today = datetime.utcnow().date()
             tomorrow = today + timedelta(days=1)
 
             return (
                 session.query(AnalysisResult)
-                .filter(AnalysisResult.prompt_id == prompt_id)
-                # Анализ, выполненный с начала сегодняшнего дня
+                # Фильтр по chat_id внутри filters
+                .filter(AnalysisResult.filters.op("->>")("chat_id") == str(chat_id))
+                # Анализы, выполненные с начала сегодняшнего дня
                 .filter(AnalysisResult.timestamp >= today)
                 # До начала завтрашнего дня
                 .filter(AnalysisResult.timestamp < tomorrow)

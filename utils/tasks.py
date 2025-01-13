@@ -11,7 +11,6 @@ from utils import get_chat_name
 load_dotenv()
 
 novosibirsk_tz = timezone('Asia/Novosibirsk')
-now = datetime.now(novosibirsk_tz)
 
 BOT_TOKEN = os.getenv('TG_API_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
