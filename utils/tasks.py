@@ -120,35 +120,36 @@ def save_analysis_result(data):
     logging.info(f"Сохранение результата анализа для чата {data['chat_id']}.")
     from database.managers.analysis_manager import AnalysisManager
     analysis_manager = AnalysisManager()
-    analysis_manager.save_analysis_result(
-        data["prompt_id"],
-        data["analysis_result"],
-        data['filters'],
-        data["tokens_input"],
-        data["tokens_output"]
-    )
+    if data["analysis_result"]:
+        analysis_manager.save_analysis_result(
+            data["prompt_id"],
+            data["analysis_result"],
+            data['filters'],
+            data["tokens_input"],
+            data["tokens_output"]
+        )
+        logging.info(f"Результат анализа сохранён для чата {data['chat_id']}.")
+    else:
+        logging.info(f"Для чата {data['chat_id']} нет анализа для сохранения.")
 
-    logging.info(f"Результат анализа сохранён для чата {data['chat_id']}.")
-    return data
 
-
-def send_analysis_result(data):
+def send_analysis_result(chat_id, analysis_result):
     """
     Отправляет результат анализа в Telegram.
     """
-    if not data or not isinstance(data, dict):
+    if not analysis_result:
         logging.error(
             "Переданы некорректные данные в send_analysis_result_task.")
         return
 
-    chat = get_chat_name(data['chat_id'])
+    chat = get_chat_name(chat_id)
     message_text = f"""Результат анализа для чата {
-        chat}:\n\n{data['analysis_result']}"""
+        chat}:\n\n{analysis_result}"""
     bot = TeleBot(BOT_TOKEN)
 
     try:
         bot.send_message(chat_id=CHAT_ID, text=message_text)
-        logging.info(f"Результат анализа отправлен в чат {data['chat_id']}.")
+        logging.info(f"Результат анализа чата отправлен {chat_id}.")
     except Exception as e:
         logging.error(f"Ошибка при отправке результата в Telegram: {e}")
     finally:
