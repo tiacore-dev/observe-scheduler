@@ -136,15 +136,15 @@ def send_analysis_result(chat_id, analysis_result):
     """
     Отправляет результат анализа в Telegram.
     """
-    if not analysis_result:
-        logging.error(
-            "Переданы некорректные данные в send_analysis_result_task.")
-        return
+    bot = TeleBot(BOT_TOKEN)
 
     chat = get_chat_name(chat_id)
-    message_text = f"""Результат анализа для чата {
-        chat}:\n\n{analysis_result}"""
-    bot = TeleBot(BOT_TOKEN)
+    if analysis_result:
+        message_text = f"""Результат анализа для чата {
+            chat}:\n\n{analysis_result}"""
+    else:
+        message_text = f"""Анализ для чата {
+            chat} отсутствует."""
 
     try:
         bot.send_message(chat_id=CHAT_ID, text=message_text)
