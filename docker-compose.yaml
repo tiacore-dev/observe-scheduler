@@ -1,5 +1,6 @@
 services:
   scheduler:
+    build: .
     volumes:
       - .:/app
     command: >
