@@ -80,13 +80,15 @@ def check_and_execute_tasks():
 
 
 def send_tasks():
-        """
+    """
     Проверяет задачи, запланированные на текущий час, и выполняет их.
     """
     from database.managers.chat_manager import ChatManager
-    chat_manager = ChatManager()
     from database.managers.analysis_manager import AnalysisManager
+
+    chat_manager = ChatManager()
     analysis_manager = AnalysisManager()
+
     now = datetime.now(novosibirsk_tz)
     current_hour = now.hour
 
@@ -105,18 +107,22 @@ def send_tasks():
                 f"Найдено {len(tasks_to_execute)} задач для выполнения.")
             for chat in tasks_to_execute:
                 # Получаем результат анализа за сегодня
-                analysis_result = analysis_manager.get_today_analysis(chat.chat_id)
-                
+                analysis_result = analysis_manager.get_today_analysis(
+                    chat.chat_id)
+
                 if analysis_result:
                     send_analysis_result(chat.chat_id, analysis_result.result)
-                    logging.info(f"Результат анализа отправлен для чата {chat.chat_id}.")
+                    logging.info(f"""Результат анализа отправлен для чата {
+                                 chat.chat_id}.""")
                 else:
-                    logging.warning(f"Результат анализа для чата {chat.chat_id} за сегодня не найден.")
+                    logging.warning(f"""Результат анализа для чата {
+                                    chat.chat_id} за сегодня не найден.""")
         else:
             logging.info("Нет задач для выполнения в текущий час.")
 
     except Exception as e:
         logging.error(f"Ошибка при проверке задач: {e}")
+
 
 def add_hourly_analysis():
     """
@@ -183,5 +189,3 @@ def clear_existing_jobs():
         logging.info("Все задачи успешно удалены из планировщика.")
     except Exception as e:
         logging.error(f"Ошибка при удалении всех задач: {e}")
-
-
