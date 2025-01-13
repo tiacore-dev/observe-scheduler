@@ -93,24 +93,41 @@ class AnalysisManager:
                 logging.error(f"Ошибка при получении анализа по ID: {e}")
                 raise
 
-    def get_today_analysis(self, chat_id: int):
+    def get_today_analysis(self, chat_id):
         """
         Возвращает результат анализа для указанного chat_id, проведённого сегодня.
+        Фильтрация по chat_id выполняется в памяти.
         """
         with self.Session() as session:
             # Используем UTC для корректной работы с датами
             today = datetime.utcnow().date()
             tomorrow = today + timedelta(days=1)
 
-            return (
+            # Извлекаем все записи за указанный период
+            results = (
                 session.query(AnalysisResult)
-                # Фильтр по chat_id внутри filters
-                .filter(AnalysisResult.filters.op("->>")("chat_id") == str(chat_id))
-                # Анализы, выполненные с начала сегодняшнего дня
+                # Анализы с начала сегодняшнего дня
                 .filter(AnalysisResult.timestamp >= today)
                 # До начала завтрашнего дня
                 .filter(AnalysisResult.timestamp < tomorrow)
-                # Последний результат за сегодня
+                # Сортировка от последнего к первому
                 .order_by(AnalysisResult.timestamp.desc())
-                .first()
+                .all()
             )
+
+            # Фильтруем записи в памяти
+            for result in results:
+                try:
+                    # Десериализуем filters
+                    filters = json.loads(
+                        result.filters) if result.filters else {}
+                    # Сравниваем chat_id
+                    # Приводим chat_id к строке для сравнения
+                    if filters.get("chat_id") == str(chat_id):
+                        return result
+                except json.JSONDecodeError:
+                    # Логируем ошибку, если filters невалидный JSON
+                    logging.error(f"""Некорректный JSON в поле filters: {
+                                  result.filters}""")
+
+            return None  # Если ни одна запись не соответствует
