@@ -1,0 +1,14 @@
+services:
+  scheduler:
+    volumes:
+      - .:/app
+    command: >
+       python main.py
+    networks:
+      - observer_network
+
+
+
+networks:
+  observer_network:
+    driver: bridge
