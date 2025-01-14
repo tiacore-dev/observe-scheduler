@@ -99,35 +99,51 @@ class AnalysisManager:
         Возвращает результат анализа для указанного chat_id, проведённого за последние 24 часа по Новосибирскому времени.
         """
         with self.Session() as session:
-            # Текущее время в Новосибирске
-            novosibirsk_tz = timezone('Asia/Novosibirsk')
-            now_nsk = datetime.now(novosibirsk_tz)
+            try:
+                # Текущее время в Новосибирске
+                novosibirsk_tz = timezone('Asia/Novosibirsk')
+                now_nsk = datetime.now(novosibirsk_tz)
 
-            # Начало периода за последние 24 часа в Новосибирском времени
-            last_24_hours_start_nsk = now_nsk - timedelta(days=1)
+                # Начало периода за последние 24 часа в Новосибирском времени
+                last_24_hours_start_nsk = now_nsk - timedelta(days=1)
 
-            # Конвертация диапазона в UTC
-            last_24_hours_start_utc = last_24_hours_start_nsk.astimezone(UTC)
-            now_utc = now_nsk.astimezone(UTC)
+                # Конвертация диапазона в UTC
+                last_24_hours_start_utc = last_24_hours_start_nsk.astimezone(
+                    UTC)
+                now_utc = now_nsk.astimezone(UTC)
 
-            # Извлекаем все записи за последние 24 часа (UTC)
-            results = (
-                session.query(AnalysisResult)
-                .filter(AnalysisResult.timestamp >= last_24_hours_start_utc)
-                .filter(AnalysisResult.timestamp < now_utc)
-                .order_by(AnalysisResult.timestamp.desc())
-                .all()
-            )
-            if results:
-                # Фильтруем записи в памяти
-                for result in results:
-                    try:
-                        filters = json.loads(
-                            result.filters) if result.filters else {}
-                        if filters.get("chat_id") == str(chat_id):
-                            return result
-                    except json.JSONDecodeError:
-                        logging.error(f"""Некорректный JSON в поле filters: {
-                            result.filters}""")
-            else:
-                return None  # Если ни одна запись не соответствует
+                logging.info(f"""Ищем результаты анализа для чата {chat_id} за период {
+                    last_24_hours_start_utc} - {now_utc} (UTC).""")
+
+                # Извлекаем все записи за последние 24 часа (UTC)
+                results = (
+                    session.query(AnalysisResult)
+                    .filter(AnalysisResult.timestamp >= last_24_hours_start_utc)
+                    .filter(AnalysisResult.timestamp < now_utc)
+                    .order_by(AnalysisResult.timestamp.desc())
+                    .all()
+                )
+
+                if results:
+                    logging.info(
+                        f"Найдено {len(results)} записей для чата {chat_id}.")
+                    # Фильтруем записи в памяти
+                    for result in results:
+                        try:
+                            filters = json.loads(
+                                result.filters) if result.filters else {}
+                            if filters.get("chat_id") == str(chat_id):
+                                logging.info(
+                                    f"Подходящий результат найден для чата {chat_id}.")
+                                return result
+                        except json.JSONDecodeError:
+                            logging.error(f"""Некорректный JSON в поле filters: {
+                                result.filters}""")
+                else:
+                    logging.info(f"""Нет результатов анализа для чата {
+                        chat_id} за последние 24 часа.""")
+                return None
+            except Exception as e:
+                logging.error(f"""Ошибка при поиске результатов анализа для чата {
+                    chat_id}: {e}""", exc_info=True)
+                return None

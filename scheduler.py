@@ -97,30 +97,46 @@ def send_tasks():
     try:
         # Получение всех чатов с активным расписанием
         chats = chat_manager.get_all_chats()
+        if chats is None:
+            logging.error(
+                "chat_manager.get_all_chats() вернул None. Ожидается список чатов.")
+            return
+        logging.info(f"Найдено {len(chats)} чатов для проверки.")
+
+        # Фильтрация чатов по текущему часу
         tasks_to_execute = [
             chat for chat in chats
             if chat.schedule_analysis and chat.send_time.hour == current_hour
         ]
+        logging.info(f"""Чатов с задачами на текущий час: {
+                     len(tasks_to_execute)}.""")
 
         if tasks_to_execute:
-            logging.info(
-                f"Найдено {len(tasks_to_execute)} задач для выполнения.")
             for chat in tasks_to_execute:
-                # Получаем результат анализа за сегодня
-                analysis_result = analysis_manager.get_today_analysis(
-                    chat.chat_id)
-                if analysis_result:
-                    send_analysis_result(chat.chat_id, analysis_result.result)
-                else:
-                    text = "Результат анализа не найден для выбранного чата"
-                    send_analysis_result(chat.chat_id, text)
-                logging.info(f"""Результат анализа отправлен для чата {
-                    chat.chat_id}.""")
+                try:
+                    logging.info(f"Обработка чата: {chat.chat_id}.")
+                    # Получаем результат анализа за последние 24 часа
+                    analysis_result = analysis_manager.get_today_analysis(
+                        chat.chat_id)
+                    if analysis_result:
+                        logging.info(f"""Результат анализа найден для чата {
+                            chat.chat_id}.""")
+                        send_analysis_result(
+                            chat.chat_id, analysis_result.result_text)
+                    else:
+                        logging.warning(f"""Результат анализа для чата {
+                                        chat.chat_id} за последние 24 часа не найден.""")
+                        send_analysis_result(
+                            chat.chat_id, "Результат анализа не найден.")
+                    logging.info(f"Задача выполнена для чата {chat.chat_id}.")
+                except Exception as e:
+                    logging.error(f"""Ошибка при выполнении задачи для чата {chat.chat_id}: {
+                                  e}""", exc_info=True)
         else:
             logging.info("Нет задач для выполнения в текущий час.")
 
     except Exception as e:
-        logging.error(f"Ошибка при проверке задач: {e}")
+        logging.error(f"Ошибка при проверке задач: {e}", exc_info=True)
 
 
 def add_hourly_analysis():

@@ -146,9 +146,11 @@ def send_analysis_result(chat_id, analysis_result):
         chat}:\n\n{analysis_result}"""
 
     try:
-        bot.send_message(chat_id=CHAT_ID, text=message_text)
-        logging.info(f"Результат анализа чата отправлен {chat_id}.")
+        bot.send_message(chat_id=chat_id, text=message_text)
+        logging.info(f"""Результат анализа для чата {
+                     chat_id} успешно отправлен.""")
     except Exception as e:
-        logging.error(f"Ошибка при отправке результата в Telegram: {e}")
+        logging.error(f"""Ошибка при отправке результата в Telegram для чата {
+                      chat_id}: {e}""", exc_info=True)
     finally:
         bot.stop_bot()
