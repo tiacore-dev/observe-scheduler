@@ -113,7 +113,7 @@ class AnalysisManager:
                 now_utc = now_nsk.astimezone(UTC)
 
                 logging.info(f"""Ищем результаты анализа для чата {chat_id} за период {
-                    last_24_hours_start_utc} - {now_utc} (UTC).""")
+                             last_24_hours_start_utc} - {now_utc} (UTC).""")
 
                 # Извлекаем все записи за последние 24 часа (UTC)
                 results = (
@@ -132,18 +132,26 @@ class AnalysisManager:
                         try:
                             filters = json.loads(
                                 result.filters) if result.filters else {}
-                            if filters.get("chat_id") == str(chat_id):
+                            stored_chat_id = filters.get("chat_id")
+                            logging.info(f"""Проверяем запись с chat_id={
+                                         stored_chat_id} для чата {chat_id}.""")
+
+                            # Сравниваем, приведение chat_id к строке
+                            if stored_chat_id == str(chat_id):
                                 logging.info(
                                     f"Подходящий результат найден для чата {chat_id}.")
                                 return result
+                            else:
+                                logging.warning(f"""Несоответствие chat_id: запись содержит {
+                                                stored_chat_id}, ожидается {chat_id}.""")
                         except json.JSONDecodeError:
                             logging.error(f"""Некорректный JSON в поле filters: {
-                                result.filters}""")
+                                          result.filters}""")
                 else:
                     logging.info(f"""Нет результатов анализа для чата {
-                        chat_id} за последние 24 часа.""")
+                                 chat_id} за последние 24 часа.""")
                 return None
             except Exception as e:
                 logging.error(f"""Ошибка при поиске результатов анализа для чата {
-                    chat_id}: {e}""", exc_info=True)
+                              chat_id}: {e}""", exc_info=True)
                 return None
