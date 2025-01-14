@@ -136,14 +136,19 @@ class AnalysisManager:
                             logging.info(f"""Проверяем запись с chat_id={
                                          stored_chat_id} для чата {chat_id}.""")
 
+                            # Логирование перед сравнением
+                            logging.info(f"Проверяем запись с chat_id={repr(stored_chat_id)} ({
+                                         type(stored_chat_id)}) для чата {repr(chat_id)} ({type(chat_id)}).")
+
                             # Сравниваем, приведение chat_id к строке
-                            if stored_chat_id == str(chat_id):
+                            if str(stored_chat_id).strip() == str(chat_id).strip():
                                 logging.info(
                                     f"Подходящий результат найден для чата {chat_id}.")
                                 return result
                             else:
                                 logging.warning(f"""Несоответствие chat_id: запись содержит {
-                                                stored_chat_id}, ожидается {chat_id}.""")
+                                                repr(stored_chat_id)}, ожидается {repr(chat_id)}.""")
+
                         except json.JSONDecodeError:
                             logging.error(f"""Некорректный JSON в поле filters: {
                                           result.filters}""")
