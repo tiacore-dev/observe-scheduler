@@ -109,8 +109,11 @@ def send_tasks():
                 # Получаем результат анализа за сегодня
                 analysis_result = analysis_manager.get_today_analysis(
                     chat.chat_id)
-
-                send_analysis_result(chat.chat_id, analysis_result.result)
+                if analysis_result:
+                    send_analysis_result(chat.chat_id, analysis_result.result)
+                else:
+                    text = "Результат анализа не найден для выбранного чата"
+                    send_analysis_result(chat.chat_id, text)
                 logging.info(f"""Результат анализа отправлен для чата {
                     chat.chat_id}.""")
         else:

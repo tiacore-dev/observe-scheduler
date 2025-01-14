@@ -141,12 +141,9 @@ def send_analysis_result(chat_id, analysis_result):
     bot = TeleBot(BOT_TOKEN)
 
     chat = get_chat_name(chat_id)
-    if analysis_result:
-        message_text = f"""Результат анализа для чата {
-            chat}:\n\n{analysis_result}"""
-    else:
-        message_text = f"""Анализ для чата {
-            chat} отсутствует."""
+
+    message_text = f"""Результат анализа для чата {
+        chat}:\n\n{analysis_result}"""
 
     try:
         bot.send_message(chat_id=CHAT_ID, text=message_text)

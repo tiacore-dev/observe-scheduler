@@ -96,40 +96,38 @@ class AnalysisManager:
 
     def get_today_analysis(self, chat_id):
         """
-        Возвращает результат анализа для указанного chat_id, проведённого сегодня по Новосибирскому времени.
+        Возвращает результат анализа для указанного chat_id, проведённого за последние 24 часа по Новосибирскому времени.
         """
         with self.Session() as session:
             # Текущее время в Новосибирске
             novosibirsk_tz = timezone('Asia/Novosibirsk')
             now_nsk = datetime.now(novosibirsk_tz)
 
-            # Начало и конец сегодняшнего дня в Новосибирском времени
-            today_nsk_start = novosibirsk_tz.localize(
-                datetime(now_nsk.year, now_nsk.month, now_nsk.day, 0, 0))
-            tomorrow_nsk_start = today_nsk_start + timedelta(days=1)
+            # Начало периода за последние 24 часа в Новосибирском времени
+            last_24_hours_start_nsk = now_nsk - timedelta(days=1)
 
             # Конвертация диапазона в UTC
-            today_utc_start = today_nsk_start.astimezone(UTC)
-            tomorrow_utc_start = tomorrow_nsk_start.astimezone(UTC)
+            last_24_hours_start_utc = last_24_hours_start_nsk.astimezone(UTC)
+            now_utc = now_nsk.astimezone(UTC)
 
-            # Извлекаем все записи за период (UTC)
+            # Извлекаем все записи за последние 24 часа (UTC)
             results = (
                 session.query(AnalysisResult)
-                .filter(AnalysisResult.timestamp >= today_utc_start)
-                .filter(AnalysisResult.timestamp < tomorrow_utc_start)
+                .filter(AnalysisResult.timestamp >= last_24_hours_start_utc)
+                .filter(AnalysisResult.timestamp < now_utc)
                 .order_by(AnalysisResult.timestamp.desc())
                 .all()
             )
-
-            # Фильтруем записи в памяти
-            for result in results:
-                try:
-                    filters = json.loads(
-                        result.filters) if result.filters else {}
-                    if filters.get("chat_id") == str(chat_id):
-                        return result
-                except json.JSONDecodeError:
-                    logging.error(f"""Некорректный JSON в поле filters: {
-                        result.filters}""")
-
-            return None  # Если ни одна запись не соответствует
+            if results:
+                # Фильтруем записи в памяти
+                for result in results:
+                    try:
+                        filters = json.loads(
+                            result.filters) if result.filters else {}
+                        if filters.get("chat_id") == str(chat_id):
+                            return result
+                    except json.JSONDecodeError:
+                        logging.error(f"""Некорректный JSON в поле filters: {
+                            result.filters}""")
+            else:
+                return None  # Если ни одна запись не соответствует
