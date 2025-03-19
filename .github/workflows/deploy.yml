@@ -2,7 +2,7 @@ name: Deploy to Server
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -19,12 +19,12 @@ jobs:
 
 
       - name: Deploy to Production
-        if: github.ref_name == 'master'
+        if: github.ref_name == 'main'
         run: |
           ssh -o StrictHostKeyChecking=no -t ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
           for service in observe-scheduler-1 observe-scheduler-2; do
             cd ~/apps/$service
-            git pull origin master
+            git pull origin main
             docker compose down
             docker compose up --build -d
           done
