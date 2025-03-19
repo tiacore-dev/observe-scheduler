@@ -3,7 +3,6 @@ import logging
 import os
 from dotenv import load_dotenv
 from pytz import timezone
-import openai
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
@@ -178,7 +177,6 @@ def start_scheduler():
     database_url = os.getenv('DATABASE_URL')
     engine, Session, Base = init_db(database_url)
     set_db_globals(engine, Session, Base)
-    openai.api_key = os.getenv('OPENAI_API_KEY')
     add_hourly_analysis()
     add_hourly_send()
     logging.info("Все задачи добавлены в планировщик.")
