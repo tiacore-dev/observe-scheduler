@@ -12,4 +12,5 @@ services:
 
 networks:
   observer_network:
-    driver: bridge
+    external: true
+    name: ${OBSERVER_NETWORK}
