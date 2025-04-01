@@ -1,7 +1,7 @@
 # from celery import app
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pytz import timezone, UTC
 from telebot import TeleBot
@@ -36,22 +36,21 @@ def analyze(chat_id, analysis_time):
     now_nsk = datetime.now(novosibirsk_tz)
 
     # Временные диапазоны в Новосибирском времени
-    analysis_start_nsk = novosibirsk_tz.localize(datetime(
-        year=now_nsk.year,
-        month=now_nsk.month,
-        day=now_nsk.day - 1,
+    analysis_start_nsk = now_nsk.replace(
         hour=analysis_time.hour,
         minute=analysis_time.minute,
         second=analysis_time.second,
-    ))
-    analysis_end_nsk = novosibirsk_tz.localize(datetime(
-        year=now_nsk.year,
-        month=now_nsk.month,
-        day=now_nsk.day,
+        microsecond=0
+    ) - timedelta(days=1)
+    analysis_start_nsk = novosibirsk_tz.localize(analysis_start_nsk)
+
+    analysis_end_nsk = now_nsk.replace(
         hour=analysis_time.hour,
         minute=analysis_time.minute,
         second=analysis_time.second,
-    ))
+        microsecond=0
+    )
+    analysis_end_nsk = novosibirsk_tz.localize(analysis_end_nsk)
 
     # Конвертация в UTC
     analysis_start = analysis_start_nsk.astimezone(UTC)
