@@ -42,7 +42,7 @@ def execute_analysis(chat_id, analysis_time):
         data = analyze(chat_id, analysis_time)
         save_analysis_result(data)
         logging.info(
-            f"Анализ завершён и данные отправлены для чата {chat_id}.")
+            f"Анализ завершён для чата {chat_id}.")
     except Exception as e:
         logging.error(f"Ошибка при выполнении анализа для чата {chat_id}: {e}")
 
