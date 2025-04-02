@@ -35,14 +35,13 @@ def analyze(chat_id, analysis_time):
 
     now_nsk = datetime.now(novosibirsk_tz)
 
-    # Временные диапазоны в Новосибирском времени
+    # now_nsk уже timezone-aware, значит можно безопасно заменять время и отнимать дни
     analysis_start_nsk = now_nsk.replace(
         hour=analysis_time.hour,
         minute=analysis_time.minute,
         second=analysis_time.second,
         microsecond=0
     ) - timedelta(days=1)
-    analysis_start_nsk = novosibirsk_tz.localize(analysis_start_nsk)
 
     analysis_end_nsk = now_nsk.replace(
         hour=analysis_time.hour,
@@ -50,9 +49,8 @@ def analyze(chat_id, analysis_time):
         second=analysis_time.second,
         microsecond=0
     )
-    analysis_end_nsk = novosibirsk_tz.localize(analysis_end_nsk)
 
-    # Конвертация в UTC
+    # оба уже имеют tzinfo, можно переводить в UTC
     analysis_start = analysis_start_nsk.astimezone(UTC)
     analysis_end = analysis_end_nsk.astimezone(UTC)
 
