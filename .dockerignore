@@ -1,0 +1,58 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Секреты и конфиги
+.env
+.env.*
+*.env
+*.ini
+*.toml
+*.yaml
+*.yml
+
+# Виртуальные окружения
+venv/
+.venv/
+.venv.bak/
+pip-wheel-metadata/
+poetry.lock
+
+# IDE/редакторы
+.vscode/
+.idea/
+*.sw?
+*.swo
+*.swp
+*.bak
+
+# Git и прочее
+.git/
+.gitignore
+.gitattributes
+
+# Тесты и мусор
+*.log
+*.tmp
+*.db
+.coverage
+.cache/
+pytest_cache/
+tests/
+docs/
+examples/
+
+# Локальные артефакты и временные папки
+audio_files_examples/
+shared_temp/
+alembic/
+migrations/
+celery_docker/
+beack_up_process_audio/
